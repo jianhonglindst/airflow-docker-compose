@@ -1,1 +1,6 @@
 README.md
+script.sh
+Pipfile
+Pipfile.lock
+.env_bk
+.gitignore

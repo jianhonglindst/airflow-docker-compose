@@ -1,0 +1,13 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pandas = "*"
+masteringstocktw = {ref = "1.0.1", git = "ssh://git@github.com/jianhonglindst/MasteringStockTaiwan.git"}
+
+[dev-packages]
+
+[requires]
+python_version = "3.7"
