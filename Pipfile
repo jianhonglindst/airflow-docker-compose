@@ -8,6 +8,9 @@ pandas = "*"
 masteringstocktw = {ref = "1.0.1", git = "ssh://git@github.com/jianhonglindst/MasteringStockTaiwan.git"}
 
 [dev-packages]
+apache-airflow = "*"
+apache-airflow-providers-docker = "*"
+apache-airflow-providers-ssh = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"

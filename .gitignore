@@ -1,2 +1,6 @@
 .env_bk
 Pipfile.lock
+dags/
+logs/
+plugins/
+volumes/
