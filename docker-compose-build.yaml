@@ -1,0 +1,13 @@
+# SSH_PRIVATE_KEY="$(cat ~/.ssh/id_rsa)" SSH_PUBLIC_KEY="$(cat ~/.ssh/id_rsa.pub)" docker-compose -f docker-compose-build.yaml build
+
+version: '3'
+
+services:
+  lewis-airflow-with-additional:
+    build:
+      context: .
+      target: lewis-airflow-with-additional
+      args:
+        - SSH_PRIVATE_KEY
+        - SSH_PUBLIC_KEY
+    image: lewis/airflow:additional

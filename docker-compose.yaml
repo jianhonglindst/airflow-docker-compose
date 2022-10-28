@@ -8,12 +8,7 @@ networks:
 
 x-airflow-common:
   &airflow-common
-  build:
-    context: .
-    target: lewis-airflow
-    args:
-      - ssh_prv_key
-      - ssh_pub_key
+  image: apache/airflow:2.4.0-python3.8
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -43,6 +38,7 @@ x-airflow-common:
 services:
   postgres:
     image: postgres:13
+    container_name: airflow-backend-postgres
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
@@ -50,7 +46,7 @@ services:
     ports:
       - '15432:5432'
     volumes:
-      - ${AIRFLOW_VOLUMES}/airflow-postgres:/var/lib/postgresql/data
+      - ${BACKEND}/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 30s
@@ -60,6 +56,7 @@ services:
 
   redis:
     image: redis:latest
+    container_name: airflow-broker-redis
     expose:
       - 6379
     healthcheck:
@@ -73,6 +70,7 @@ services:
   airflow-webserver:
     <<: *airflow-common
     command: webserver
+    container_name: airflow-webserver
     ports:
       - 8080:8080
     healthcheck:
@@ -89,6 +87,7 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    container_name: airflow-scheduler
     healthcheck:
       test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
       interval: 30s
@@ -101,9 +100,10 @@ services:
         condition: service_completed_successfully
 
 
-  airflow-worker:
+  airflow-worker-crawler-stock:
     <<: *airflow-common
-    command: celery worker
+    command: celery worker -q crawler-stock
+    container_name: airlfow-worker-crawler-stock
     healthcheck:
       test:
         - "CMD-SHELL"
@@ -120,9 +120,32 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+
+  airflow-worker-crawler-ptt:
+    <<: *airflow-common
+    command: celery worker -q crawler-ptt
+    container_name: airlfow-worker-crawler-ptt
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    environment:
+      <<: *airflow-common-env
+      DUMB_INIT_SETSID: "0"
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+
   airflow-triggerer:
     <<: *airflow-common
     command: triggerer
+    container_name: airflow-triggerer
     healthcheck:
       test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
       interval: 30s
@@ -134,9 +157,11 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+
   airflow-init:
     <<: *airflow-common
     entrypoint: /bin/bash
+    container_name: airflow-init
     command:
       - -c
       - |
@@ -213,6 +238,7 @@ services:
 
   airflow-cli:
     <<: *airflow-common
+    container_name: airflow-cli
     profiles:
       - debug
     environment:
@@ -227,6 +253,7 @@ services:
   flower:
     <<: *airflow-common
     command: celery flower
+    container_name: airflow-celery-flower
     profiles:
       - flower
     ports:
@@ -247,15 +274,19 @@ services:
     build:
       context: .
       target: lewis-socat
+    image: docker-proxy
     command: "TCP4-LISTEN:2375,fork,reuseaddr UNIX-CONNECT:/var/run/docker.sock"
+    container_name: docker-proxy
     ports:
       - "2376:2375"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
 
 
   twse-en-postgres:
     image: postgres:13
+    container_name: twse-en-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -269,6 +300,7 @@ services:
 
   twse-en-postgres-test:
     image: postgres:13
+    container_name: twse-en-postgres-test
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -278,3 +310,38 @@ services:
     volumes:
       - ${DATABASE_POSTGRES_VOLUMES}/twse-en-postgres-test:/var/lib/postgresql/data
     restart: always
+
+
+  minio:
+    image: minio/minio:latest
+    container_name: storage-minio
+    volumes:
+      - ${STORAGE}/MinIO/data:/data
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: 12345678
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+
+
+  # rabbitmq:
+  #   image: rabbitmq:3.9.24-management
+  #   container_name: airflow-broker-rabbitmq
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   volumes:
+  #     - ${BROKER}/rabbitmq/data/:/var/lib/rabbitmq/
+  #     - ${BROKER}/rabbitmq/log/:/var/log/rabbitmq/
+  #   restart: always
+  #   healthcheck:
+  #     test: rabbitmq-diagnostics -q ping
+  #     interval: 1m30s
+  #     timeout: 30s
+  #     retries: 50

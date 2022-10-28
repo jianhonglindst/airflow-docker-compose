@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-FROM apache/airflow:2.4.0-python3.8 as lewis-airflow
+FROM apache/airflow:2.4.0-python3.8 as lewis-airflow-with-additional
 
 USER root
 
@@ -31,10 +31,10 @@ RUN echo "$ssh_prv_key" > /home/airflow/.ssh/id_rsa && \
     chmod 600 /home/airflow/.ssh/id_rsa.pub
 
 # for package
-COPY requirements.txt .
+COPY requirements-additional.txt .
 
 RUN pip install --upgrade pip \
-  &&  pip install -r requirements.txt --no-cache-dir --user
+  &&  pip install -r requirements-additional.txt --no-cache-dir --user
 
 # Remove SSH keys
 RUN rm -rf /home/airflow/.ssh/
