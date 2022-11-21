@@ -319,29 +319,14 @@ services:
       - ${STORAGE}/MinIO/data:/data
     ports:
       - "9000:9000"
+      - "9001:9001"
     environment:
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: 12345678
-    command: server http://minio{1...4}/data{1...2}
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: 12345678
+    command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 1m30s
-      timeout: 30s
-      retries: 5
-
-
-  # rabbitmq:
-  #   image: rabbitmq:3.9.24-management
-  #   container_name: airflow-broker-rabbitmq
-  #   ports:
-  #     - "5672:5672"
-  #     - "15672:15672"
-  #   volumes:
-  #     - ${BROKER}/rabbitmq/data/:/var/lib/rabbitmq/
-  #     - ${BROKER}/rabbitmq/log/:/var/log/rabbitmq/
-  #   restart: always
-  #   healthcheck:
-  #     test: rabbitmq-diagnostics -q ping
-  #     interval: 1m30s
-  #     timeout: 30s
-  #     retries: 50
+      timeout: 20s
+      retries: 3
+    restart: always

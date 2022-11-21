@@ -13,3 +13,4 @@ ssh_prv_key="$(cat ~/.ssh/id_rsa)" ssh_pub_key="$(cat ~/.ssh/id_rsa.pub)" docker
 # docker network create airflow-network  && \
 docker-compose up airflow-init  && \
 docker-compose up -d
+docker-compose up -d flower
