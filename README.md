@@ -1,5 +1,13 @@
 ## personal-docker-compose
 
+
+## 環境
+
+```
+docker compose v2
+```
+
+
 ### v1.0.0
 
 1. 有利用 `Dockerfile` 進行重新製作 `images` 的功能，利用 `ssh-key` 去指揮環境下載私有套件來安裝

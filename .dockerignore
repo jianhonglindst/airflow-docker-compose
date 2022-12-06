@@ -4,3 +4,9 @@ Pipfile
 Pipfile.lock
 .env_bk
 .gitignore
+dags/
+logs/
+plugins/
+volumes/
+Storages/
+setup_airflow_server.sh

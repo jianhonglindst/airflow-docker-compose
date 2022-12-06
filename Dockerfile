@@ -42,7 +42,7 @@ RUN rm -rf /home/airflow/.ssh/
 #-------------------------------------------------------------------------------
 FROM alpine:edge as lewis-socat
 
-ARG VERSION=1.7.4.3-r1
+ARG VERSION=1.7.4.4-r0
 
 RUN apk update && apk --no-cache add socat=${VERSION}
 
