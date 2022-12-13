@@ -100,10 +100,10 @@ services:
         condition: service_completed_successfully
 
 
-  airflow-worker-crawler-stock:
+  airflow-worker-stock-twse:
     <<: *airflow-common
-    command: celery worker -q crawler-stock
-    container_name: airlfow-worker-crawler-stock
+    command: celery worker -q stock-twse
+    container_name: airlfow-worker-stock-twse
     healthcheck:
       test:
         - "CMD-SHELL"
@@ -121,25 +121,25 @@ services:
         condition: service_completed_successfully
 
 
-  airflow-worker-crawler-ptt:
-    <<: *airflow-common
-    command: celery worker -q crawler-ptt
-    container_name: airlfow-worker-crawler-ptt
-    healthcheck:
-      test:
-        - "CMD-SHELL"
-        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    environment:
-      <<: *airflow-common-env
-      DUMB_INIT_SETSID: "0"
-    restart: always
-    depends_on:
-      <<: *airflow-common-depends-on
-      airflow-init:
-        condition: service_completed_successfully
+  # airflow-worker-crawler-ptt:
+  #   <<: *airflow-common
+  #   command: celery worker -q crawler-ptt
+  #   container_name: airlfow-worker-crawler-ptt
+  #   healthcheck:
+  #     test:
+  #       - "CMD-SHELL"
+  #       - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #   environment:
+  #     <<: *airflow-common-env
+  #     DUMB_INIT_SETSID: "0"
+  #   restart: always
+  #   depends_on:
+  #     <<: *airflow-common-depends-on
+  #     airflow-init:
+  #       condition: service_completed_successfully
 
 
   airflow-triggerer:
@@ -270,18 +270,18 @@ services:
         condition: service_completed_successfully
 
 
-  docker-proxy:
-    build:
-      context: .
-      target: lewis-socat
-    image: docker-proxy
-    command: "TCP4-LISTEN:2375,fork,reuseaddr UNIX-CONNECT:/var/run/docker.sock"
-    container_name: docker-proxy
-    ports:
-      - "2376:2375"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    restart: always
+  # docker-proxy:
+  #   build:
+  #     context: .
+  #     target: lewis-socat
+  #   image: docker-proxy
+  #   command: "TCP4-LISTEN:2375,fork,reuseaddr UNIX-CONNECT:/var/run/docker.sock"
+  #   container_name: docker-proxy
+  #   ports:
+  #     - "2376:2375"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   restart: always
 
 
   twse-en-postgres:
@@ -298,35 +298,35 @@ services:
     restart: always
 
 
-  twse-en-postgres-test:
-    image: postgres:13
-    container_name: twse-en-postgres-test
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-    ports:
-      - '35432:5432'
-    volumes:
-      - ${DATABASE_POSTGRES_VOLUMES}/twse-en-postgres-test:/var/lib/postgresql/data
-    restart: always
+  # twse-en-postgres-test:
+  #   image: postgres:13
+  #   container_name: twse-en-postgres-test
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: postgres
+  #   ports:
+  #     - '35432:5432'
+  #   volumes:
+  #     - ${DATABASE_POSTGRES_VOLUMES}/twse-en-postgres-test:/var/lib/postgresql/data
+  #   restart: always
 
 
-  minio:
-    image: minio/minio:latest
-    container_name: storage-minio
-    volumes:
-      - ${STORAGE}/MinIO/data:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: 12345678
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 1m30s
-      timeout: 20s
-      retries: 3
-    restart: always
+  # minio:
+  #   image: minio/minio:latest
+  #   container_name: storage-minio
+  #   volumes:
+  #     - ${STORAGE}/MinIO/data:/data
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: 12345678
+  #   command: server /data --console-address ":9001"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+  #     interval: 1m30s
+  #     timeout: 20s
+  #     retries: 3
+  #   restart: always
